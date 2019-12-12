@@ -211,8 +211,7 @@ def delete():
 
     for i in range(len(maintenanceid_expired)):
         delete_id = maintenanceid_expired[i]
-        print(delete_id)
-        # zz.maintenance_delete(delete_id, auth_code)
+        maintenance_api.maintenance_delete(delete_id, auth_code)
 
 
 if __name__ == '__main__':
