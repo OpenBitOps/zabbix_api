@@ -4,9 +4,9 @@
 import requests
 import json
 import time
-import sys
 import configparser
-
+import os
+import io
 
 
 class zabbix_api():
@@ -149,7 +149,7 @@ class zabbix_api():
         )
 
         result_data = content.json()
-        print(result_data)
+
         # get data(result) of dist(result_data)
         result = result_data['result']
 
@@ -187,41 +187,50 @@ class zabbix_api():
 
 def zabbix_api_config():
     config = configparser.ConfigParser()
-    config.read('config', encoding='utf-8')
+    config.read('/root/.jenkins/zabbix_api.conf', encoding='utf-8')
 
     username = config.get('auth', 'user')
     password = config.get('auth', 'password')
     api_url = config.get('api_url', 'url')
+    result_file = config.get('result', 'delete_result_file')
 
-    return username, password, api_url
+    return username, password, api_url, result_file
 
 
 def delete():
-    host = sys.argv[1]
+    hosts_get = os.getenv('host')
+    hosts = hosts_get.split(',')
+
+    date_time = time.strftime("%Y-%m-%d %X", time.localtime())
 
     user = zabbix_api_config()[0]
     password = zabbix_api_config()[1]
     api_url = zabbix_api_config()[2]
+    result_file = zabbix_api_config()[3]
 
     maintenance_api = zabbix_api(user, password, api_url)
     auth_code = maintenance_api.login()
 
-    f = open('zabbix_maintenance_delete_result.log', 'w', encoding='utf-8')
+    f = io.open(result_file, 'wb')
     f.write(str(date_time) + '\n')
     f.close()
 
     # get maintenance id of maintenance expired
-    for host_new in host:
+    for host_new in hosts:
         host_id = maintenance_api.get_host_id(host_new, auth_code)
         maintenanceid_expired = maintenance_api.maintenance_expired_get(host_id, auth_code)
-        for i in range(len(maintenanceid_expired)):
-            delete_id = maintenanceid_expired[i]
-            maintenance_api.maintenance_delete(delete_id, auth_code)
+        if maintenanceid_expired:
+            for i in range(len(maintenanceid_expired)):
+                delete_id = maintenanceid_expired[i]
+                maintenance_api.maintenance_delete(delete_id, auth_code)
+                f_new = io.open(result_file, 'ab')
+                f_new.write(host_new + ' maintenance id delete: ' + delete_id + '\n')
+                f_new.close()
+        else:
             f_new = io.open(result_file, 'ab')
-            f_new.write(host_new + ' maintenance id delete: ' + delete_id + '\n')
+            f_new.write(host_new + ' maintenance id delete failed\n')
             f_new.close()
 
 
 if __name__ == '__main__':
     delete()
-

@@ -4,3 +4,7 @@ password =
 
 [api_url]
 url = 
+
+[result]
+create_result_file =
+delete_result_file =

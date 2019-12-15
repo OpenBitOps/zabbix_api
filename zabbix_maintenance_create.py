@@ -4,9 +4,8 @@
 import requests
 import json
 import time
-from datetime import date
-import sys
 import configparser
+import os
 
 
 class zabbix_api():
@@ -123,7 +122,7 @@ class zabbix_api():
         result_data = content.json()
         print(result_data)
 
-    def maintenance_expired_get(self, hostname, authentication):
+    def maintenance_expired_get(self, hostid, authentication):
         """
 
         :param hostname:
@@ -135,7 +134,7 @@ class zabbix_api():
             'method': 'maintenance.get',
             'params': {
                 'output': 'extend',
-                'selectHosts': hostname,
+                'hostids': hostid,
                 'selectTimeperiods': 'extend'
             },
             'auth': authentication,
@@ -161,7 +160,7 @@ class zabbix_api():
             if ( int(time.time()) - int(active_till_time) ) > 0:
                 expired = result[i]['maintenanceid']
                 maintenance_expired_id.append(expired)
-
+        print(maintenance_expired_id)
         return maintenance_expired_id
 
 
@@ -198,10 +197,14 @@ def zabbix_api_config():
 
 
 def create():
-    host = sys.argv[1]
-    period = int(sys.argv[2])
-    description = sys.argv[3]
-    date_time = str(date.fromtimestamp(time.time()))
+    hosts_get = os.getenv('host')
+    hosts = hosts_get.split(',')
+
+    period_get = int(os.getenv('period'))
+    period = int(period_get * 3600)
+    description = ''
+
+    date_time = time.strftime("%Y-%m-%d %X",time.localtime())
     active_since = int(time.time())
     active_till = int(time.time()) + period
 
@@ -211,11 +214,19 @@ def create():
 
     maintenance_api = zabbix_api(user, password, api_url)
     auth_code = maintenance_api.login()
-    host_id = maintenance_api.get_host_id(host, auth_code)
 
-    # maintenance create
-    maintenance_api.maintenance_create('AutoMaintenance_' + date_time + '_' + host, \
-                                       host_id, active_since, active_till, period, auth_code, description)
+    f = open('zabbix_maintenance_create_result.log', 'w', encoding='utf-8')
+    f.write(str(date_time) + '\n')
+    f.close()
+
+    for host_new in hosts:
+        # maintenance create
+        host_id = maintenance_api.get_host_id(host_new, auth_code)
+        maintenance_api.maintenance_create('AutoMaintenance_' + date_time + '_' + host_new, host_id, active_since, active_till, period, auth_code, description)
+
+        f_new = open('zabbix_maintenance_create_result.log', 'a', encoding='utf8')
+        f_new.write(host_new + ' maintenance create for ' + str(period_get) + ' hours')
+        f_new.close()
 
 
 if __name__ == '__main__':
