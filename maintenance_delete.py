@@ -4,7 +4,8 @@
 import requests
 import json
 import time
-import configparser
+import os
+import yaml
 
 
 class zabbix_maintenance_api():
@@ -246,12 +247,14 @@ class main():
         读取配置文件config中的用户名/密码/API的url地址
         :return: username, password, api_url
         """
-        config = configparser.ConfigParser()
-        config.read('config', encoding='utf-8')
+        file_name_path = os.path.split(os.path.realpath(__file__))[0]
+        yaml_path = os.path.join(file_name_path, 'zabbix_api.yaml')
 
-        username = config.get('auth', 'user')
-        password = config.get('auth', 'password')
-        api_url = config.get('api_url', 'url')
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            conf = yaml.load(f, Loader=yaml.FullLoader)
+            username = conf['authenticate']['user']
+            password = conf['authenticate']['password']
+            api_url = conf['api_url']['url']
 
         return username, password, api_url
 
@@ -266,9 +269,8 @@ class main():
 
         # 初始化log文件
         log_file = 'maintenance_delete_result.log'
-        f = open(log_file, 'w', encoding='utf-8')
-        f.write('')
-        f.close()
+        with open(log_file, 'w', encoding='utf-8') as f1:
+            f1.write('')
 
         # 维护名使用
         active_since = int(time.time())
@@ -283,23 +285,21 @@ class main():
             auth_code = mainten.login()
 
             # 日志文件操作
-            f = open(log_file, 'a', encoding='utf-8')
-            f.write('To zabbix maintenance team:\n')
-            f.write(hosts + ' maintanence delete on zabbix server:\n')
-            f.write('delete time: ' + str(date_time) + '\n')
+            with open(log_file, 'a', encoding='utf-8') as f2:
+                f2.write('To zabbix maintenance team:\n')
+                f2.write(hosts + ' maintanence delete on zabbix server:\n')
+                f2.write('delete time: ' + str(date_time) + '\n')
 
-            # maintenance delete
-            for host in hosts_new:
-                # get maintenance id of maintenance expired
-                host_id = mainten.get_host_id(host, auth_code)
-                maintenanceid_expired = mainten.maintenance_expired_get(host_id, auth_code)
+                # maintenance delete
+                for host in hosts_new:
+                    # get maintenance id of maintenance expired
+                    host_id = mainten.get_host_id(host, auth_code)
+                    maintenanceid_expired = mainten.maintenance_expired_get(host_id, auth_code)
 
-                for i in range(len(maintenanceid_expired)):
-                    delete_id = maintenanceid_expired[i]
-                    mainten.maintenance_delete(delete_id, auth_code)
-
-                    f.write('[success] maintenance id delete: ' + str(delete_id) + '\n')
-            f.close()
+                    for i in range(len(maintenanceid_expired)):
+                        delete_id = maintenanceid_expired[i]
+                        mainten.maintenance_delete(delete_id, auth_code)
+                        f2.write('[success] maintenance id delete: ' + str(delete_id) + '\n')
 
         except Exception as e:
             print(e)
@@ -307,5 +307,9 @@ class main():
 
 if __name__ == '__main__':
     hosts = input("please input host (test001 or test001,test002): ")
-    mm = main()
-    mm.delete(hosts)
+    if hosts == None:
+        print('hosts must be entered.')
+        exit(1)
+    else:
+        mm = main()
+        mm.delete(hosts)

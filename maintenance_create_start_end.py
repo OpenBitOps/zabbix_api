@@ -4,7 +4,8 @@
 import requests
 import json
 import time
-import configparser
+import os
+import yaml
 
 
 class zabbix_maintenance_api():
@@ -246,12 +247,14 @@ class main():
         读取配置文件config中的用户名/密码/API的url地址
         :return: username, password, api_url
         """
-        config = configparser.ConfigParser()
-        config.read('config', encoding='utf-8')
+        file_name_path = os.path.split(os.path.realpath(__file__))[0]
+        yaml_path = os.path.join(file_name_path, 'zabbix_api.yaml')
 
-        username = config.get('auth', 'user')
-        password = config.get('auth', 'password')
-        api_url = config.get('api_url', 'url')
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            conf = yaml.load(f, Loader=yaml.FullLoader)
+            username = conf['authenticate']['user']
+            password = conf['authenticate']['password']
+            api_url = conf['api_url']['url']
 
         return username, password, api_url
 
@@ -276,9 +279,8 @@ class main():
 
         # 初始化log文件
         log_file = 'maintenance_create_start_end_result.log'
-        f = open(log_file, 'w', encoding='utf-8')
-        f.write('')
-        f.close()
+        with open(log_file, 'w', encoding='utf-8') as f1:
+            f1.write('')
 
         # 维护名使用
         date_time = time.strftime("%Y%m%d%H%M%S", time.localtime(active_since))
@@ -292,19 +294,17 @@ class main():
             auth_code = mainten.login()
 
             # 日志文件操作
-            f = open(log_file, 'a', encoding='utf-8')
-            f.write('To zabbix maintenance team:\n')
-            f.write(hosts + ' maintanence created on zabbix server:\n')
-            f.write('maintenance start time: ' + str(start_time) + '\n')
-            f.write('maintenance end time: ' + str(end_time) + '\n')
+            with open(log_file, 'a', encoding='utf-8') as f2:
+                f2.write('To zabbix maintenance team:\n')
+                f2.write(hosts + ' maintanence created on zabbix server:\n')
+                f2.write('maintenance start time: ' + str(start_time) + '\n')
+                f2.write('maintenance end time: ' + str(end_time) + '\n')
 
-            # maintenance create
-            for host in hosts_new:
-                host_id = mainten.get_host_id(host, auth_code)
-                mainten.maintenance_create_start_end('maintenance_' + date_time + '_' + host, host_id, active_since, active_till, auth_code, description)
-
-                f.write('[success] maintenance definition with hostname [' + host + '] created')
-            f.close()
+                # maintenance create
+                for host in hosts_new:
+                    host_id = mainten.get_host_id(host, auth_code)
+                    mainten.maintenance_create_start_end('maintenance_' + date_time + '_' + host, host_id, active_since, active_till, auth_code, description)
+                    f2.write('[success] maintenance definition with hostname [' + host + '] created')
 
         except Exception as e:
             print(e)
@@ -314,6 +314,9 @@ if __name__ == '__main__':
     hosts = input("please input host (test001 or test001,test002): ")
     start_time = input("please input maintenance start time (like this: 2019-12-18 10:10:00): ")
     end_time = input("please input maintenance end time (like this: 2019-12-18 11:10:00): ")
-
-    mm = main()
-    mm.create_start_end(hosts, start_time, end_time)
+    if hosts == None or start_time ==None or end_time ==None:
+        print('hosts and start_time and end_time must be entered.')
+        exit(1)
+    else:
+        mm = main()
+        mm.create_start_end(hosts, start_time, end_time)
