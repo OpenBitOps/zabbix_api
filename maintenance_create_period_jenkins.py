@@ -259,11 +259,18 @@ class main():
         username = conf['authenticate']['user']
         password = conf['authenticate']['password']
         api_url = conf['api_url']['url']
-        log_file = conf['log']['file_name']
+        log_file_period = conf['log']['result_create_period_log']
+        f.close()
 
-        return username, password, api_url, log_file
+        return username, password, api_url, log_file_period
 
     def create_period(self, hosts, period):
+        """
+        主逻辑方法, 创建主机的维护
+        :param hosts:
+        :param period:
+        :return:
+        """
         # 维护名描述, 本方法此处为空, 不做描述内容, 如有需求, 请自行修改
         description = ''
 
@@ -278,18 +285,17 @@ class main():
         date_time = time.strftime("%Y%m%d%H%M%S", time.localtime(active_since))
 
         try:
-            user = self.zabbix_api_config()[0]
-            password = self.zabbix_api_config()[1]
-            api_url = self.zabbix_api_config()[2]
-            log_file = self.zabbix_api_config()[3]
+            conf_read = self.zabbix_api_config()
+            user = conf_read[0]
+            password = conf_read[1]
+            api_url = conf_read[2]
+            log_file = conf_read[3]
 
             # 初始化log文件
             f = io.open(log_file, 'wb')
             f.write('')
             f.write('To zabbix maintenance team:\n')
-            f.write(hosts_get + ' maintanence created on zabbix server:\n')
-            f.write('maintenance start time: ' + str(start_time) + '\n')
-            f.write('maintenance duration: ' + str(period) + ' hour(s)' + '\n')
+            f.write(str(hosts) + ' maintanence created on zabbix server:\n')
             f.close()
 
             mainte = zabbix_maintenance_api(user, password, api_url)
@@ -304,11 +310,13 @@ class main():
                 mch = pattern.findall(str(context))
                 if mch:
                     f_new = io.open(log_file, 'ab')
-                    f_new.write(host + ' maintenance creation failed')
+                    f_new.write('[failed] maintenance created : ' + host + '\n')
                     f_new.close()
                 else:
                     f_new = io.open(log_file, 'ab')
-                    f_new.write('[success] maintenance definition with hostname [' + host + '] created')
+                    f_new.write('maintenance start time: ' + str(start_time) + '\n')
+                    f_new.write('maintenance duration: ' + str(period) + ' hour(s)' + '\n')
+                    f_new.write('[success] maintenance created : ' + host + '\n')
                     f_new.close()
 
         except Exception as e:
@@ -325,6 +333,7 @@ if __name__ == '__main__':
 
     if hosts == None or period == None:
         print('hosts and period must be entered.')
+        exit(1)
     else:
         mm = main()
         mm.create_period(hosts, period)

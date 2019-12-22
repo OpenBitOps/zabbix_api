@@ -5,8 +5,8 @@ import requests
 import json
 import time
 import os
+import re
 import yaml
-
 
 class zabbix_maintenance_api():
     """
@@ -277,9 +277,10 @@ class main():
         date_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(active_since))
 
         try:
-            user = self.zabbix_api_config()[0]
-            password = self.zabbix_api_config()[1]
-            api_url = self.zabbix_api_config()[2]
+            conf_read =  self.zabbix_api_config()
+            user = conf_read[0]
+            password = conf_read[1]
+            api_url = conf_read[2]
 
             mainten = zabbix_maintenance_api(user, password, api_url)
             auth_code = mainten.login()
@@ -298,8 +299,14 @@ class main():
 
                     for i in range(len(maintenanceid_expired)):
                         delete_id = maintenanceid_expired[i]
-                        mainten.maintenance_delete(delete_id, auth_code)
-                        f2.write('[success] maintenance id delete: ' + str(delete_id) + '\n')
+                        context = mainten.maintenance_delete(delete_id, auth_code)
+
+                        pattern = re.compile(r'\berror\b')
+                        mch = pattern.findall(str(context))
+                        if mch:
+                            f2.write('[failed] maintenance id deleted : ' + host + ' ' + str(delete_id) + '\n')
+                        else:
+                            f2.write('[success] maintenance id deleted : ' + host + ' ' + str(delete_id) + '\n')
 
         except Exception as e:
             print(e)
