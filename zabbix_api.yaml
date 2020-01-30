@@ -6,4 +6,6 @@ api_url:
     url: 
 
 log:
-    file_name:
+    result_create_period_log:
+    result_create_start_end_log:
+    result_delete_log:

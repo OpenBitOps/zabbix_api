@@ -10,7 +10,8 @@ import yaml
 
 class zabbix_maintenance_api():
     """
-    zabbix 维护模式 api, 本方法仅提供创建和删除2个功能
+    zabbix API for maintenance settings
+    this method only provides 2 functions for creating and deleting
     """
     globals()
     header = {'Content-Type': 'application/json'}
@@ -23,7 +24,7 @@ class zabbix_maintenance_api():
 
     def login(self):
         """
-        zabbix登录, 获取认证的token
+        Zabbix login, get authenticated token
         :return: authentication
         """
         data = {
@@ -39,18 +40,18 @@ class zabbix_maintenance_api():
 
         auth = self.sses.post(
             url=self.api_url,
-            headers=zabbix_maintenance_api.header,
+            headers=self.header,
             data=json.dumps(data)
         )
 
-        authentication_data = auth.json()
+        authentication_data = json.loads(auth.text)
         authentication = authentication_data['result']
 
         return authentication
 
     def get_host_id(self, hostname, authentication):
         """
-        获取zabbix中的主机ID
+        Get host ID in Zabbix
         :param hostname: hosts
         :param authentication: get from login function
         :return: host_id
@@ -69,18 +70,19 @@ class zabbix_maintenance_api():
 
         content = self.sses.post(
             url=self.api_url,
-            headers=zabbix_maintenance_api.header,
+            headers=self.header,
             data=json.dumps(data)
         )
 
-        host_data = content.json()
+        host_data = json.loads(content.text)
         host_id = host_data['result'][0]['hostid']
 
         return host_id
 
-    def maintenance_create_period(self, maintenance_name, host_id, active_since, active_till, period, authentication, description):
+    def maintenance_create_period(self, maintenance_name, host_id, active_since, \
+                                  active_till, period, authentication, description):
         """
-        创建维护期间1: 创建一个维护时间段period, 如 1hour/2hour
+        Maintenance setting method 1: Create a maintenance period period, such as 1hour / 2hour
         :param maintenance_name:
         :param host_id:
         :param active_since: start time
@@ -114,17 +116,19 @@ class zabbix_maintenance_api():
 
         content = self.sses.post(
             url=self.api_url,
-            headers=zabbix_maintenance_api.header,
+            headers=self.header,
             data=json.dumps(data)
         )
 
-        result_data = content.json()
+        result_data = json.loads(content.text)
 
         print(result_data)
 
-    def maintenance_create_start_end(self,maintenance_name, host_id, active_since, active_till, authentication, description):
+    def maintenance_create_start_end(self,maintenance_name, host_id, active_since, \
+                                     active_till, authentication, description):
         """
-        创建维护期间2: 创建一个维护模式开始和结束时间, 如 2019-12-18 10:10:00 至 2019-12-18 11:10:00
+        Maintenance setting method 2: Create a maintenance mode with start and end time,
+        such as 2019-12-18 10:10:00 to 2019-12-18 11:10:00
         :param maintenance_name:
         :param host_id:
         :param active_since:
@@ -156,17 +160,17 @@ class zabbix_maintenance_api():
 
         content = self.sses.post(
             url=self.api_url,
-            headers=zabbix_maintenance_api.header,
+            headers=self.header,
             data=json.dumps(data)
         )
 
-        result_data = content.json()
+        result_data = json.loads(content.text)
 
         print(result_data)
 
     def maintenance_expired_get(self, hostid, authentication):
         """
-        获取已过期的维护id
+        Get expired maintenance id (a list)
         :param hostid:
         :param authentication:
         :return: maintenance_expired_id
@@ -185,11 +189,11 @@ class zabbix_maintenance_api():
 
         content = self.sses.post(
             url=self.api_url,
-            headers=zabbix_maintenance_api.header,
+            headers=self.header,
             data=json.dumps(data)
         )
 
-        result_data = content.json()
+        result_data = json.loads(content.text)
 
         # get data(result) of dist(result_data)
         result = result_data['result']
@@ -207,10 +211,9 @@ class zabbix_maintenance_api():
 
         return maintenance_expired_id
 
-
     def maintenance_delete(self, maintenanceid, authentication):
         """
-        删除已过期的维护
+        Delete expired maintenance
         :param maintenanceid:
         :param authentication:
         :return:
@@ -227,24 +230,23 @@ class zabbix_maintenance_api():
 
         content = self.sses.post(
             url=self.api_url,
-            headers=zabbix_maintenance_api.header,
+            headers=self.header,
             data=json.dumps(data)
         )
 
-        result_data = content.json()
+        result_data = json.loads(content.text)
         print(result_data)
-
 
 class main():
     """
-    主逻辑方法, 创建zabbix维护
+    I don't understand how to write comments
     """
     def __init__(self):
         pass
 
     def zabbix_api_config(self):
         """
-        读取配置文件config中的用户名/密码/API的url地址
+        Get the username / password / URL of the API in the configuration file config
         :return: username, password, api_url
         """
         file_name_path = os.path.split(os.path.realpath(__file__))[0]
@@ -260,27 +262,27 @@ class main():
 
     def create_period(self, hosts, period):
         """
-        输入主机名 和 维护时间时长
+        Enter host name and maintenance duration
         :return:
         """
-        # 维护名描述, 本方法此处为空, 不做描述内容, 如有需求, 请自行修改
+        # Maintenance description, default None
         description = ''
 
-        # 初始化log文件
+        # Initialize the log file
         log_file = 'maintenance_create_period_result.log'
         with open(log_file, 'w', encoding='utf-8') as f1:
             f1.write('')
             f1.write('To zabbix maintenance team:\n')
             f1.write(str(hosts) + ' maintanence created on zabbix server:\n')
 
-        # 维护开始时间和结束时间
+        # Maintenance start time and end time
         active_since = int(time.time())
         active_till = int(time.time()) + period
 
-        # 维护名使用
+        # for maintenance name use
         date_time = time.strftime("%Y%m%d%H%M%S", time.localtime(active_since))
 
-        # 输出到日志
+        # output maintanence start time to log
         start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(active_since))
 
         try:
@@ -294,8 +296,8 @@ class main():
 
             for host in hosts:
                 host_id = mainten.get_host_id(host, auth_code)
-                context = mainten.maintenance_create_period('maintenance_' + date_time + '_' + host, host_id, active_since,
-                                                  active_till, period, auth_code, description)
+                context = mainten.maintenance_create_period('maintenance_' + date_time + '_' + host, host_id, active_since, \
+                                                            active_till, period, auth_code, description)
                 pattern = re.compile(r'\berror\b')
                 mch = pattern.findall(str(context))
                 if mch:
@@ -309,7 +311,6 @@ class main():
 
         except Exception as e:
             print(e)
-
 
 if __name__ == '__main__':
     hosts_get = input("please input host (test001 or test001,test002): ")

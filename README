@@ -1,0 +1,14 @@
+zabbix api for maintanence
+
+1. 文件名没带Jenkins的脚本，为本地PC使用
+2. 文件名带有Jenkins的脚本，为Jenkins job使用
+	Jenkins job需配置
+		maintenance_create_period_jenkins.py => 使用该脚本的Jenkins job需配置字符串类型的变量 hosts和period(输入的period必须为int)
+
+		maintenance_create_start_end_jenkins.py => 使用该脚本的Jenkins job需配置字符串类型的变量 hosts、start_time和end_time (start_time、end_time的输入格式为 2019-12-18 11:10:00)
+
+		maintenance_delete.py => 使用该脚本的Jenkins job需配置字符串类型的变量 hosts 即可
+3. yaml配置文件
+	authenticate项: 配置zabbix的用户名和密码
+	api_url项: 配置zabbix api地址，http://company.com/zabbix/api_jsonrpc.php
+	log项: 配置log文件(请配置绝对路径)
