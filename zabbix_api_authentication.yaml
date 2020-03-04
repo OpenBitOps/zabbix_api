@@ -1,6 +1,6 @@
 authenticate:
-    user: 
-    password: 
+    user:
+    password:
 
 api_url:
     url: 
@@ -8,4 +8,5 @@ api_url:
 log:
     result_create_period_log:
     result_create_start_end_log:
-    result_delete_log:
+    result_delete_expired_log:
+    result_delete_maintenanceid_log:
