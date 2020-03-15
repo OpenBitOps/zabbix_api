@@ -1,0 +1,9 @@
+authentication:
+    user:
+    password:
+
+urls:
+    zabbix_api_url:
+
+logs:
+    result_log:

@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding:utf-8 -*-
-# @Time    : 2020/3/1 16:35
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2020/3/15 13:20
 # @Author  : Ethan
-# @File    : maintenance_create_period_jenkins.py
+# @File    : api_maintenance.py
 
 import requests
 import json
@@ -18,36 +18,6 @@ class zabbix_maintenance_methods():
 
     def __init__(self, api_url):
         self.api_url = api_url
-
-    def get_host_id(self, hostname, authentication):
-        """
-        Get host ID in Zabbix
-        :param hostname: hosts
-        :param authentication: get from login function
-        :return: host_id
-        """
-        data = {
-            'jsonrpc': '2.0',
-            'method': 'host.get',
-            'params': {
-                'filter': {
-                    'host': hostname,
-                }
-            },
-            'auth': authentication,
-            'id': 1,
-        }
-
-        content = requests.post(
-            url=self.api_url,
-            headers=self.header,
-            data=json.dumps(data)
-        )
-
-        host_data = json.loads(content.text)
-        zabbix_host_id = host_data['result'][0]['hostid']
-
-        return zabbix_host_id
 
     def maintenance_create_period(self, maintenance_name, host_id, active_since,
                                   active_till, period, authentication, description):

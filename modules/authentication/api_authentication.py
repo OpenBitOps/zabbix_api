@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/3/1 16:15
+# @Time    : 2020/3/15 13:13
 # @Author  : Ethan
-# @File    : zabbix_api.py
+# @File    : api_authentication.py
 
 import requests
 import json
+
 
 class zabbix_api_authentication():
     """
@@ -46,3 +47,34 @@ class zabbix_api_authentication():
         authentication = authentication_data['result']
 
         return authentication
+
+    def get_host_id(self, hostname):
+        """
+        Get host ID in Zabbix
+        :param hostname: hosts
+        :return: host_id
+        """
+        authentication = self.login_authentication()
+
+        data = {
+            'jsonrpc': '2.0',
+            'method': 'host.get',
+            'params': {
+                'filter': {
+                    'host': hostname,
+                }
+            },
+            'auth': authentication,
+            'id': 1,
+        }
+
+        content = requests.post(
+            url=self.api_url,
+            headers=self.header,
+            data=json.dumps(data)
+        )
+
+        host_data = json.loads(content.text)
+        host_id = host_data['result'][0]['hostid']
+
+        return host_id
