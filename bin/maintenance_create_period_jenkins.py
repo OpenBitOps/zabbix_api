@@ -73,7 +73,7 @@ def maintenance_create_period(hosts, period, description):
             f_new = io.open(log_file, 'a', encoding='utf-8')
             f_new.write(u'[success] maintenance created: ' + hostname + u'\n')
             f_new.write(u'maintenance start time: ' + str(start_time) + u'\n')
-            f_new.write(u'maintenance duration: ' + str(period) + u' hour(s)\n')
+            f_new.write(u'maintenance duration: ' + str(period/3600) + u' hour(s)\n')
             f_new.close()
 
 
