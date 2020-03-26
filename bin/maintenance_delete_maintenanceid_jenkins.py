@@ -51,17 +51,18 @@ def maintenanceid_delete(maintenanceid):
     maintence_ = api_maintenance.zabbix_maintenance_methods(api_url)
 
     for delete_id in maintenanceid:
-        context = maintence_.maintenance_delete(delete_id, authentication)
+        id_ = delete_id.strip()
+        context = maintence_.maintenance_delete(id_, authentication)
 
         pattern = re.compile(r'error')
         mch = pattern.findall(str(context))
         if mch:
             f_new = io.open(log_file, 'a', encoding='utf-8')
-            f_new.write(u'[failed] maintenance id deleted: ' + str(delete_id) + u'\n')
+            f_new.write(u'[failed] maintenance id deleted: ' + str(id_) + u'\n')
             f_new.close()
         else:
             f_new = io.open(log_file, 'a', encoding='utf-8')
-            f_new.write(u'[success] maintenance id deleted: ' + str(delete_id) + u'\n')
+            f_new.write(u'[success] maintenance id deleted: ' + str(id_) + u'\n')
             f_new.close()
 
 

@@ -63,6 +63,8 @@ class zabbix_maintenance_methods():
         result_data = json.loads(content.text)
         print(result_data)
 
+        return result_data
+
     def maintenance_create_start_end(self, maintenance_name, host_id, active_since,
                                      active_till, authentication, description):
         """
@@ -105,6 +107,8 @@ class zabbix_maintenance_methods():
 
         result_data = json.loads(content.text)
         print(result_data)
+
+        return result_data
 
     def maintenance_expired_get(self, host_id, authentication):
         """

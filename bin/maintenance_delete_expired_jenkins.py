@@ -52,7 +52,8 @@ def maintenanceid_expired_delete(hosts):
 
     # get maintenance id of maintenance expired
     for hostname in hosts:
-        host_id = authen_.get_host_id(hostname)
+        host = hostname.strip()
+        host_id = authen_.get_host_id(host)
         maintenanceid_expired = maintence_.maintenance_expired_get(host_id, authentication)
 
         for i in range(len(maintenanceid_expired)):

@@ -44,11 +44,11 @@ def maintenance_create_period(hosts, period, description):
     log_file = conf_data[3]
 
     # Initialize the log file
-    f = io.open(log_file, 'w', encoding='utf-8')
-    f.write(u'')
-    f.write(u'To zabbix maintenance team:\n')
-    f.write(str(hosts) + u' maintanence created on zabbix server:\n')
-    f.close()
+    f1 = io.open(log_file, 'w', encoding='utf-8')
+    f1.write(u'')
+    f1.write(u'To zabbix maintenance team:\n')
+    f1.write(str(hosts) + u' maintanence created on zabbix server:\n')
+    f1.close()
 
     # init zabbix api form modules
     authen_ = api_authentication.zabbix_api_authentication(user, password, api_url)
@@ -59,21 +59,25 @@ def maintenance_create_period(hosts, period, description):
     # maintenance create
     for hostname in hosts:
         # maintenance create
-        host_id = authen_.get_host_id(hostname)
-        context = maintence_.maintenance_create_period('maintenance_' + date_time + '_' + hostname, host_id,
+        host = hostname.strip()
+        host_id = authen_.get_host_id(host)
+        context = maintence_.maintenance_create_period('maintenance_' + date_time + '_' + host, host_id,
                                                        active_since, active_till, period, authentication, description)
 
+        maintenanceids = context['result']['maintenanceids'][0]
         pattern = re.compile(r'error')
         mch = pattern.findall(str(context))
         if mch:
             f_new = io.open(log_file, 'a', encoding='utf-8')
-            f_new.write(u'[failed] maintenance created : ' + hostname + u'\n')
+            f_new.write(u'[failed] maintenance created : ' + host + u'\n')
             f_new.close()
         else:
             f_new = io.open(log_file, 'a', encoding='utf-8')
-            f_new.write(u'[success] maintenance created: ' + hostname + u'\n')
+            f_new.write(u'[success] maintenance created: ' + host + u'\n')
+            f_new.write(u'maintenance id: ' + maintenanceids + u'\n')
             f_new.write(u'maintenance start time: ' + str(start_time) + u'\n')
             f_new.write(u'maintenance duration: ' + str(period) + u' hour(s)\n')
+            f_new.write(u'\n')
             f_new.close()
 
 

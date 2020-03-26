@@ -59,19 +59,22 @@ def maintenance_create_start_end(hosts, start_time, end_time, description):
 
     # maintenance create
     for hostname in hosts:
-        host_id = authen_.get_host_id(hostname)
-        context = maintence_.maintenance_create_start_end('maintenance_' + date_time + '_' + hostname, host_id,
+        host = hostname.strip()
+        host_id = authen_.get_host_id(host)
+        context = maintence_.maintenance_create_start_end('maintenance_' + date_time + '_' + host, host_id,
                                                           active_since, active_till, authentication, description)
 
+        maintenanceids = context['result']['maintenanceids'][0]
         pattern = re.compile(r'error')
         mch = pattern.findall(str(context))
         if mch:
             f_new = io.open(log_file, 'a', encoding='utf-8')
-            f_new.write(u'[failed] maintenance created: ' + hostname + u'\n')
+            f_new.write(u'[failed] maintenance created: ' + host + u'\n')
             f_new.close()
         else:
             f_new = io.open(log_file, 'a', encoding='utf-8')
-            f_new.write(u'[success] maintenance created: ' + hostname + u'\n')
+            f_new.write(u'[success] maintenance created: ' + host + u'\n')
+            f_new.write(u'maintenance id: ' + maintenanceids + u'\n')
             f_new.write(u'maintenance start time: ' + str(start_time) + u'\n')
             f_new.write(u'maintenance end time: ' + str(end_time) + u'\n')
             f_new.close()
