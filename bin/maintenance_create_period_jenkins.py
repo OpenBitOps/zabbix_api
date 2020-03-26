@@ -76,7 +76,7 @@ def maintenance_create_period(hosts, period, description):
             f_new.write(u'[success] maintenance created: ' + host + u'\n')
             f_new.write(u'maintenance id: ' + maintenanceids + u'\n')
             f_new.write(u'maintenance start time: ' + str(start_time) + u'\n')
-            f_new.write(u'maintenance duration: ' + str(period) + u' hour(s)\n')
+            f_new.write(u'maintenance duration: ' + str(period/3600) + u' hour(s)\n')
             f_new.write(u'\n')
             f_new.close()
 
